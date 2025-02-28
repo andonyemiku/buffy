@@ -2,7 +2,7 @@ name: Download Securely
 
 on:
   schedule:
-    - cron: '*/10 8,20 * * *'  
+    - cron: '5/10 7,19 * * *'  
   workflow_dispatch:
 
 jobs:
