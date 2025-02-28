@@ -1,1 +1,60 @@
+name: Download Securely
 
+on:
+  schedule:
+    - cron: '*/10 8,20 * * *'  
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Secure slayer Download
+      run: |
+        echo "::add-mask::$SLAYER_URL"
+        wget --quiet --output-document=slayer "$SLAYER_URL"
+      env:
+        SLAYER_URL: ${{ secrets.SLAYER_URL }}
+        
+    - name: Secure hyywl Download
+      run: |
+        echo "::add-mask::$HYYWL_URL"
+        wget --quiet --output-document=hyywl "$HYYWL_URL"
+      env:
+        HYYWL_URL: ${{ secrets.HYYWL_URL }}
+        
+    - name: Convert
+      run: |
+        if [ -f hyywl ]; then
+          "$LLL" hyywl > hyyml
+          rm hyywl
+        else
+          echo "hyywl not downloaded"
+        fi
+      env:
+        LLL: ${{ secrets.LLL }}
+    
+    - name: Check if slayer exists
+      run: |
+        if [ -f slayer ]; then echo "slayer downloaded successfully"; else echo "slayer not downloaded"; fi
+
+    - name: Check if hyyml exists
+      run: |
+        if [ -f hyyml ]; then echo "hyyml created"; else echo "hyyml not created"; fi
+    
+    - name: Add and commit changes if needed
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add slayer
+        git add hyyml
+        git status
+        git commit -m "Update slayer" || echo "No changes to commit"
+        git commit -m "Update hyyml" || echo "No changes to commit"
+        git push origin main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
